@@ -64,3 +64,16 @@ public abstract class AbstractSet<E> extends AbstractCollection<E> implements Se
     }
 
 总的来说，这个类就是Set的主要实现，跟其他的AbstractList之类一样。
+
+
+----------
+## HashSet ##
+public class HashSet<E>
+    extends AbstractSet<E>
+    implements Set<E>, Cloneable, java.io.Serializable
+
+此类实现 Set 接口，由哈希表（实际上是一个 HashMap 实例）支持。它不保证 set 的迭代顺序；特别是它不保证该顺序恒久不变。此类允许使用 null 元素。
+
+注意，此实现不是同步的。
+
+> 我是万万没想到，竟然里面用HashMap来实现的。
