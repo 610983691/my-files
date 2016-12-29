@@ -77,3 +77,82 @@ public class HashSet<E>
 注意，此实现不是同步的。
 
 > 我是万万没想到，竟然里面用HashMap来实现的。
+
+
+----------
+首先看看它的字段：
+
+     private transient HashMap<E,Object> map;
+
+    // Dummy value to associate with an Object in the backing Map
+    private static final Object PRESENT = new Object();//map中的值都是这个
+
+然后是构造方法：
+
+	public HashSet() {
+        map = new HashMap<>();
+    }
+	public HashSet(Collection<? extends E> c) {
+        map = new HashMap<>(Math.max((int) (c.size()/.75f) + 1, 16));
+        addAll(c);
+    }
+	public HashSet(int initialCapacity, float loadFactor) {
+        map = new HashMap<>(initialCapacity, loadFactor);
+    }
+	public HashSet(int initialCapacity) {
+        map = new HashMap<>(initialCapacity);
+    }
+这就很明显了，HashSet本质上就是一个hashMap.再看看它的add方法，就会更加的清楚：
+
+    public boolean add(E e) {
+        return map.put(e, PRESENT)==null;//这样的话，map中的每个key对应的value都是PRESENT，而且这个对象还是static final的。
+    }
+
+	public boolean remove(Object o) {
+        return map.remove(o)==PRESENT;
+    }
+
+	public Iterator<E> iterator() {
+        return map.keySet().iterator();//必须是keySet，因为set的值就是map中的key.
+    }
+
+
+----------
+# TreeSet 类 #
+public class TreeSet<E> extends AbstractSet<E>
+    implements NavigableSet<E>, Cloneable, java.io.Serializable
+同样，这个类也是基于TreeMap来实现的，---这里也跟TreeMap一样，TreeSet的元素类型必须实现Compareable接口
+代码：
+    
+ 	private transient NavigableMap<E,Object> m;
+	private static final Object PRESENT = new Object();
+
+	public TreeSet() {
+        this(new TreeMap<E,Object>());
+    }
+	TreeSet(NavigableMap<E,Object> m) {
+        this.m = m;
+    }
+
+	public TreeSet(Comparator<? super E> comparator) {
+        this(new TreeMap<>(comparator));
+    }
+
+	public TreeSet(Collection<? extends E> c) {
+        this();
+        addAll(c);
+    }
+
+	public boolean add(E e) {
+        return m.put(e, PRESENT)==null;
+    }
+
+----------
+运行如下代码，也会发现抛出异常。就是因为TestTreeMap 没有实现compareble接口导致的。
+
+    TreeSet<TestTreeMap> set = new TreeSet<TestTreeMap>();
+		set.add(t1);
+		set.add(t2);
+
+
+----------

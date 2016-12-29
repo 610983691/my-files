@@ -749,3 +749,644 @@ public class HashMap<K,V> extends AbstractMap<K,V>  implements Map<K,V>, Cloneab
 
 
 ----------
+    //由于散列存储的关系，不能由table[i]来直接获取元素的值哦
+	public boolean containsValue(Object value) {
+		if (value == null)
+			return containsNullValue();
+
+		Entry[] tab = table;
+		for (int i = 0; i < tab.length; i++)
+			for (Entry e = tab[i]; e != null; e = e.next)
+				if (value.equals(e.value))
+					return true;
+		return false;
+	}
+
+
+----------
+迭代器实现：
+定义了抽象的hash迭代器并提供了骨干的实现
+    private abstract class HashIterator<E> implements Iterator<E> {
+		Entry<K, V> next; // next entry to return
+		int expectedModCount; // For fast-fail
+		int index; // current slot
+		Entry<K, V> current; // current entry
+
+		HashIterator() {
+			expectedModCount = modCount;
+			if (size > 0) { // advance to first entry //index是怎么初始化的呢，虽然int变量的默认值是0，但是这样写未免有点？
+				Entry[] t = table;
+				while (index < t.length && (next = t[index++]) == null);
+			}
+		}
+
+		public final boolean hasNext() {//对于entry来说，是table中的一个非空元素
+			return next != null;
+		}
+
+		final Entry<K, V> nextEntry() {
+			if (modCount != expectedModCount)
+				throw new ConcurrentModificationException();
+			Entry<K, V> e = next;
+			if (e == null)
+				throw new NoSuchElementException();
+
+			if ((next = e.next) == null) {//设置nextEntry
+				Entry[] t = table;
+				while (index < t.length && (next = t[index++]) == null);
+			}
+			current = e;
+			return e;
+		}
+
+		public void remove() {
+			if (current == null)
+				throw new IllegalStateException();
+			if (modCount != expectedModCount)
+				throw new ConcurrentModificationException();
+			Object k = current.key;
+			current = null;
+			HashMap.this.removeEntryForKey(k);
+			expectedModCount = modCount;
+		}
+	}
+
+	/***
+	*下面分别是key,value和entry的迭代器实例，他们继承上面的hashIterator并各自实现next方法。
+	*/
+	private final class ValueIterator extends HashIterator<V> {
+		public V next() {
+			return nextEntry().value;
+		}
+	}
+
+	private final class KeyIterator extends HashIterator<K> {
+		public K next() {
+			return nextEntry().getKey();
+		}
+	}
+
+	private final class EntryIterator extends HashIterator<Map.Entry<K, V>> {
+		public Map.Entry<K, V> next() {
+			return nextEntry();
+		}
+	}
+
+----------
+> KeySet对应的集合，它是HashMap内部的私有AbstractSet实现的。
+> 
+	private final class KeySet extends AbstractSet<K> {
+		public Iterator<K> iterator() {
+			return newKeyIterator();//前面的key迭代器
+		}
+		public int size() {
+			return size;
+		}
+		public boolean contains(Object o) {
+			return containsKey(o);
+		}
+		public boolean remove(Object o) {
+			return HashMap.this.removeEntryForKey(o) != null;
+		}
+		public void clear() {
+			HashMap.this.clear();//这个Hash.this，就可以保证，外部调用keySet的clear就会清除掉这个map实例的table中的内容.
+		}
+	}
+
+	//这个方法和上面的keySet一样
+	public Collection<V> values() {
+		Collection<V> vs = values;
+		return (vs != null ? vs : (values = new Values()));
+	}
+
+	private final class Values extends AbstractCollection<V> {
+		public Iterator<V> iterator() {
+			return newValueIterator();
+		}
+		public int size() {
+			return size;
+		}
+		public boolean contains(Object o) {
+			return containsValue(o);
+		}
+		public void clear() {
+			HashMap.this.clear();
+		}
+	}
+
+自己说了这么多，主要是看代码去了，对代码的实现和HashMap实现原理有了一定理解。同时，自己的文档整理起来还是不好阅读，因为代码太多了。不过，想要快速浏览，可以参考这个文章：
+[http://blog.csdn.net/caihaijiang/article/details/6280251](http://blog.csdn.net/caihaijiang/article/details/6280251 "HashMap详解")
+
+
+----------
+# TreeMap 类 #
+
+类的声明：
+public class TreeMap<K,V>
+    extends AbstractMap<K,V>
+    implements NavigableMap<K,V>, Cloneable, java.io.Serializable
+
+API文档描述：
+基于红黑树（Red-Black tree）的 NavigableMap 实现。该映射根据其键的自然顺序进行排序，或者根据创建映射时提供的 Comparator 进行排序，具体取决于使用的构造方法。
+
+此实现为 containsKey、get、put 和 remove 操作提供受保证的 log(n) 时间开销。这些算法是 Cormen、Leiserson 和 Rivest 的 Introduction to Algorithms 中的算法的改编。
+
+注意，如果要正确实现 Map 接口，则有序映射所保持的顺序（无论是否明确提供了比较器）都必须与 equals 一致。（关于与 equals 一致 的精确定义，请参阅 Comparable 或 Comparator）。这是因为 Map 接口是按照 equals 操作定义的，但有序映射使用它的 compareTo（或 compare）方法对所有键进行比较，因此从有序映射的观点来看，此方法认为相等的两个键就是相等的。即使排序与 equals 不一致，有序映射的行为仍然是 定义良好的，只不过没有遵守 Map 接口的常规协定。
+
+注意，此实现不是同步的。
+它不接受null的key值。
+
+红黑树的简单介绍：
+[http://www.cnblogs.com/skywang12345/p/3245399.html](http://www.cnblogs.com/skywang12345/p/3245399.html "红黑树介绍")
+
+对本文TreeMap的代码分析与介绍：
+[http://blog.csdn.net/bigtree_3721/article/details/42050697](http://blog.csdn.net/bigtree_3721/article/details/42050697 "TreeMap源码分析与介绍")
+
+下面看看代码中能描述上面说的这些特性的代码实现：
+
+
+----------
+   	//变量定义
+	private final Comparator<? super K> comparator;//比较器
+
+    private transient Entry<K,V> root = null;
+
+    /**
+     * The number of entries in the tree
+     */
+    private transient int size = 0;
+
+    /**
+     * The number of structural modifications to the tree.
+     */
+    private transient int modCount = 0;
+
+可以看出TreeMap并没有像之前的HashMap那样使用一个数组来存储键值映射关系。而是使用一个root来表示，这很正常，因为这个是基于树来实现的。而HashMap是散列的存储，就要用到数组。
+而它的内部类也没有多特殊的方法，只是为了实现红黑树会有多个属性。
+
+	Entry内部类：
+	static final class Entry<K,V> implements Map.Entry<K,V> {
+        K key;
+        V value;
+        Entry<K,V> left = null;
+        Entry<K,V> right = null;
+        Entry<K,V> parent;
+        boolean color = BLACK; //每个节点所拥有的属性
+
+        /**
+         * Make a new cell with given key, value, and parent, and with
+         * {@code null} child links, and BLACK color.
+         */
+        Entry(K key, V value, Entry<K,V> parent) {
+            this.key = key;
+            this.value = value;
+            this.parent = parent;
+        }
+
+        public K getKey() {
+            return key;
+        }
+     
+        public V getValue() {
+            return value;
+        }
+
+        public V setValue(V value) {
+            V oldValue = this.value;
+            this.value = value;
+            return oldValue;
+        }
+
+        public boolean equals(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry<?,?> e = (Map.Entry<?,?>)o;
+
+            return valEquals(key,e.getKey()) && valEquals(value,e.getValue());
+        }
+
+        public int hashCode() {
+            int keyHash = (key==null ? 0 : key.hashCode());
+            int valueHash = (value==null ? 0 : value.hashCode());
+            return keyHash ^ valueHash;
+        }
+
+        public String toString() {
+            return key + "=" + value;
+        }
+    }
+
+----------
+因为是使用了红黑树---特殊的二叉查找树，因此这个树是二叉排序的。所以会有下面的方法：
+
+	//分别获取树的最小和最大的entry
+
+	 final Entry<K,V> getFirstEntry() {
+        Entry<K,V> p = root;
+        if (p != null)
+            while (p.left != null)
+                p = p.left;
+        return p;
+    }
+
+    /**
+     * Returns the last Entry in the TreeMap (according to the TreeMap's
+     * key-sort function).  Returns null if the TreeMap is empty.
+     */
+    final Entry<K,V> getLastEntry() {
+        Entry<K,V> p = root;
+        if (p != null)
+            while (p.right != null)
+                p = p.right;
+        return p;
+    }
+
+二叉树的查找下一个方法：
+
+	 /**
+     * Returns the successor of the specified Entry, or null if no such.
+     * 这个方法是获取当前entry的比它大下一个entry节点
+     * 画图画图看
+     */
+    static <K,V> TreeMap.Entry<K,V> successor(Entry<K,V> t) {
+        if (t == null)
+            return null;
+        else if (t.right != null) {//右节点中序号最小的
+            Entry<K,V> p = t.right;
+            while (p.left != null)
+                p = p.left;
+            return p;
+        } else {
+            Entry<K,V> p = t.parent;
+            Entry<K,V> ch = t;
+            while (p != null && ch == p.right) {//父节点中最小的节点，如果它一直都是右节点就往前不断的遍历
+                ch = p;
+                p = p.parent;
+            }
+            return p;
+        }
+    }
+
+	/**
+     * Returns the predecessor of the specified Entry, or null if no such.
+     * 获取它的前一个节点，根据二叉排序树来说，就是她的左子节点的最右边节点或者是它的父节点（当它是该父节点的右子节点时）
+     */
+    static <K,V> Entry<K,V> predecessor(Entry<K,V> t) {
+        if (t == null)
+            return null;
+        else if (t.left != null) {
+            Entry<K,V> p = t.left;
+            while (p.right != null)
+                p = p.right;
+            return p;
+        } else {
+            Entry<K,V> p = t.parent;
+            Entry<K,V> ch = t;
+            while (p != null && ch == p.left) {//简洁有效
+                ch = p;
+                p = p.parent;
+            }
+            return p;
+        }
+    }
+
+
+----------
+
+红黑树的操作：
+
+    /** From CLR */
+    private void rotateLeft(Entry<K,V> p) {左旋
+        if (p != null) {
+            Entry<K,V> r = p.right;
+            p.right = r.left;
+            if (r.left != null)
+                r.left.parent = p;
+            r.parent = p.parent;
+            if (p.parent == null)
+                root = r;
+            else if (p.parent.left == p)
+                p.parent.left = r;
+            else
+                p.parent.right = r;
+            r.left = p;
+            p.parent = r;
+        }
+    }
+
+    /** From CLR */
+    private void rotateRight(Entry<K,V> p) {//右旋
+        if (p != null) {
+            Entry<K,V> l = p.left;
+            p.left = l.right;
+            if (l.right != null) l.right.parent = p;
+            l.parent = p.parent;
+            if (p.parent == null)
+                root = l;
+            else if (p.parent.right == p)
+                p.parent.right = l;
+            else p.parent.left = l;
+            l.right = p;
+            p.parent = l;
+        }
+    }
+
+
+----------
+put方法：
+    
+	public V put(K key, V value) {
+        Entry<K,V> t = root;
+        if (t == null) {//如果为null就新建一个entry
+            compare(key, key); // type (and possibly null) check
+			//这里是用比较器，可以外部传一个comparator进来，否则为null。这样的话，就会使用key所带的比较器来比较。意思就是key类型，必须要实现compareTo方法
+            root = new Entry<>(key, value, null);
+            size = 1;
+            modCount++;
+            return null;
+        }
+        int cmp;
+        Entry<K,V> parent;
+        // split comparator and comparable paths
+        Comparator<? super K> cpr = comparator;
+        if (cpr != null) {
+            do {
+                parent = t;
+                cmp = cpr.compare(key, t.key);
+                if (cmp < 0)
+                    t = t.left;
+                else if (cmp > 0)
+                    t = t.right;
+                else
+                    return t.setValue(value);
+            } while (t != null);
+        }
+        else {
+            if (key == null)
+                throw new NullPointerException();
+            Comparable<? super K> k = (Comparable<? super K>) key;//强转为comparable类型---这就说明，Key必须要实现compareble接口
+            do {
+                parent = t;
+                cmp = k.compareTo(t.key);
+                if (cmp < 0)
+                    t = t.left;
+                else if (cmp > 0)
+                    t = t.right;
+                else
+                    return t.setValue(value);
+            } while (t != null);
+        }
+        Entry<K,V> e = new Entry<>(key, value, parent);
+        if (cmp < 0)
+            parent.left = e;
+        else
+            parent.right = e;
+        fixAfterInsertion(e);
+        size++;
+        modCount++;
+        return null;
+    }
+
+针对上面的TreeMap，我在本地环境运行如下代码：
+    
+	public class TestTreeMap {
+
+		public static void main(String[] args) {
+			// TODO Auto-generated method stub
+			TreeMap<TestTreeMap, String> map = new TreeMap<TestTreeMap, String>();
+			TestTreeMap t1 = new TestTreeMap();
+			TestTreeMap t2 = new TestTreeMap();
+			map.put(t1, "12");//报错---报错原因就是上面方法中的compare方法，
+			map.put(t2, "123");
+		}
+
+	}
+由于TestTreeMap没有实现Compareble接口，因此不能将TestTreeMap作为Key。很重要，以后使用TreeMap的时候需要注意，不要很容易就给自己的程序产生bug而且难以理解。不过还好，遇到这个问题的人应该不在少数。
+
+
+----------
+get方法：
+
+	public V get(Object key) {
+        Entry<K,V> p = getEntry(key);
+        return (p==null ? null : p.value);
+    }
+
+	final Entry<K,V> getEntry(Object key) {
+        // Offload comparator-based version for sake of performance
+        if (comparator != null)
+            return getEntryUsingComparator(key);
+        if (key == null)
+            throw new NullPointerException();//不支持null值
+        Comparable<? super K> k = (Comparable<? super K>) key;
+        Entry<K,V> p = root;
+        while (p != null) {
+            int cmp = k.compareTo(p.key);
+            if (cmp < 0)
+                p = p.left;
+            else if (cmp > 0)
+                p = p.right;
+            else
+                return p;
+        }
+        return null;
+    }
+
+----------
+# SortedMap 接口#
+	
+更具体的还是看接口文档描述：
+
+进一步提供关于键的总体排序 的 Map。该映射是根据其键的自然顺序进行排序的，或者根据通常在创建有序映射时提供的 Comparator 进行排序。对有序映射的 collection 视图（由 entrySet、keySet 和 values 方法返回）进行迭代时，此顺序就会反映出来。要采用此排序方式，还需要提供一些其他操作（此接口是 SortedSet 的对应映射）。
+
+插入有序映射的所有键都必须实现 Comparable 接口（或者被指定的比较器接受）。另外，所有这些键都必须是可互相比较的：对有序映射中的任意两个键 k1 和 k2 执行 k1.compareTo(k2)（或 comparator.compare(k1, k2)）都不得抛出 ClassCastException。试图违反此限制将导致违反规则的方法或者构造方法调用抛出 ClassCastException。
+
+
+
+----------
+# HashTable类 #
+类的声明如下;
+
+public class Hashtable<K,V>
+    extends Dictionary<K,V>
+    implements Map<K,V>, Cloneable, java.io.Serializable {
+
+API文档中的部分描述如下：
+> 此类实现一个哈希表，该哈希表将键映射到相应的值。任何非 null 对象都可以用作键或值。
+
+
+
+> 为了成功地在哈希表中存储和获取对象，用作键的对象必须实现 hashCode 方法和 equals 方法。
+
+
+
+> Hashtable 的实例有两个参数影响其性能：初始容量 和加载因子。容量 是哈希表中桶 的数量，初始容量 就是哈希表创建时的容量。注意，哈希表的状态为 open：在发生“哈希冲突”的情况下，单个桶会存储多个条目，这些条目必须按顺序搜索。加载因子 是对哈希表在其容量自动增加之前可以达到多满的一个尺度。初始容量和加载因子这两个参数只是对该实现的提示。关于何时以及是否调用 rehash 方法的具体细节则依赖于该实现。
+
+> 从Java 2 平台 v1.2起，此类就被改进以实现 Map 接口，使它成为 Java Collections Framework 中的一个成员。不像新的 collection 实现，**Hashtable 是同步的**
+
+
+----------
+字段定义：
+
+	private transient Entry<K,V>[] table;
+
+	private transient int count;
+
+	private int threshold;
+
+	private float loadFactor;
+
+	private transient int modCount = 0;
+
+
+----------
+看看hashtable的内部类Entry:
+
+    private static class Entry<K,V> implements Map.Entry<K,V> {
+        int hash;
+        final K key;
+        V value;
+        Entry<K,V> next;//--字段都和hashMap一样
+
+        protected Entry(int hash, K key, V value, Entry<K,V> next) {
+            this.hash = hash;
+            this.key =  key;
+            this.value = value;
+            this.next = next;
+        }
+
+        protected Object clone() {//clone方法，递归的clone.所以是一个深拷贝
+            return new Entry<>(hash, key, value,
+                                  (next==null ? null : (Entry<K,V>) next.clone()));
+        }
+
+        // Map.Entry Ops
+
+        public K getKey() {
+            return key;
+        }
+
+        public V getValue() {
+            return value;
+        }
+
+        public V setValue(V value) {
+            if (value == null)//不接受null值，hashMap可以！！注意是值都不能为null.
+                throw new NullPointerException();
+
+            V oldValue = this.value;
+            this.value = value;
+            return oldValue;
+        }
+
+        public boolean equals(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry<?,?> e = (Map.Entry)o;
+
+            return key.equals(e.getKey()) && value.equals(e.getValue());
+        }
+
+        public int hashCode() {
+            return (Objects.hashCode(key) ^ Objects.hashCode(value));
+        }
+
+        public String toString() {
+            return key.toString()+"="+value.toString();
+        }
+    }
+
+
+----------
+实现同步以及常用的public 方法：
+
+    public synchronized int size() {//public方法都是synchronized修饰的。
+        return count;
+    }
+
+	public synchronized V put(K key, V value) {
+        // Make sure the value is not null
+        if (value == null) {
+            throw new NullPointerException();
+        }
+
+        // Makes sure the key is not already in the hashtable.
+        Entry tab[] = table;
+        int hash = hash(key);
+        int index = (hash & 0x7FFFFFFF) % tab.length;//要存储的位置
+        for (Entry<K,V> e = tab[index] ; e != null ; e = e.next) {
+            if ((e.hash == hash) && e.key.equals(key)) {//hash值相等，key也相等，就会替换原来的值，并将原值返回。
+                V old = e.value;
+                e.value = value;
+                return old;
+            }
+        }
+
+        modCount++;
+        if (count >= threshold) {
+            // Rehash the table if the threshold is exceeded
+            rehash();//重新设置table的长度
+
+            tab = table;
+            hash = hash(key);
+            index = (hash & 0x7FFFFFFF) % tab.length;
+        }
+
+        // Creates the new entry.
+        Entry<K,V> e = tab[index];
+        tab[index] = new Entry<>(hash, key, value, e);
+        count++;
+        return null;
+    }
+	
+	public synchronized V get(Object key) {
+        Entry tab[] = table;
+        int hash = hash(key);
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        for (Entry<K,V> e = tab[index] ; e != null ; e = e.next) {
+            if ((e.hash == hash) && e.key.equals(key)) {
+                return e.value;
+            }
+        }
+        return null;
+    }
+
+	此外，它还有些KeySet等内部类，实现都与hashMap里面的差不多。
+
+与hashMap不同的就是是，这个Hashtable不接受null的key和value。同时，它是线程安全的。
+
+----------
+
+#LinkedHashMap 类  #
+类的声明：
+
+public class LinkedHashMap<K,V>
+    extends HashMap<K,V>
+    implements Map<K,V>
+
+API文档部分说明：
+
+> Map 接口的哈希表和链接列表实现，具有可预知的迭代顺序。此实现与 HashMap 的不同之处在于，后者维护着一个运行于所有条目的双重链接列表。此链接列表定义了迭代顺序，该迭代顺序通常就是将键插入到映射中的顺序（插入顺序）。注意，如果在映射中重新插入 键，则插入顺序不受影响。（如果在调用 m.put(k, v) 前 m.containsKey(k) 返回了 true，则调用时会将键 k 重新插入到映射 m 中。）
+
+> 此实现可以让客户避免未指定的、由 HashMap（及 Hashtable）所提供的通常为杂乱无章的排序工作，同时无需增加与 TreeMap 相关的成本。使用它可以生成一个与原来顺序相同的映射副本，而与原映射的实现无关：
+
+
+----------
+变量：
+    
+	/**
+     * The head of the doubly linked list.
+     */
+	private transient Entry<K,V> header;
+
+	/**
+     * The iteration ordering method for this linked hash map: <tt>true</tt>
+     * for access-order, <tt>false</tt> for insertion-order.
+     *
+     * @serial
+     */
+    private final boolean accessOrder;
+
+构造方法：
+    
+	
