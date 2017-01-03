@@ -1377,7 +1377,7 @@ API文档部分说明：
 	/**
      * The head of the doubly linked list.
      */
-	private transient Entry<K,V> header;
+	private transient Entry<K,V> header;//链表的头
 
 	/**
      * The iteration ordering method for this linked hash map: <tt>true</tt>
@@ -1388,5 +1388,122 @@ API文档部分说明：
     private final boolean accessOrder;
 
 构造方法：
+
+	public LinkedHashMap() {
+		super();
+		accessOrder = false;
+	}
+
+----------
+其他方法：
+
+	/**
+	 * Called by superclass constructors and pseudoconstructors (clone,
+	 * readObject) before any entries are inserted into the map. Initializes the
+	 * chain.
+	 */
+	@Override
+	void init() {//被父类调用
+		header = new Entry<>(-1, null, null, null);
+		header.before = header.after = header;//空的链表
+	}
     
+
+	//由于linkedHashMap是链表实现，所以转为newTable时，需要覆盖父类的方法
+	void transfer(HashMap.Entry[] newTable, boolean rehash) {
+		int newCapacity = newTable.length;
+		for (Entry<K, V> e = header.after; e != header; e = e.after) {
+			if (rehash)
+				e.hash = (e.key == null) ? 0 : hash(e.key);
+			int index = indexFor(e.hash, newCapacity);
+			e.next = newTable[index];
+			newTable[index] = e;
+		}
+	}
+
+
+	/**
+	 * This override differs from addEntry in that it doesn't resize the table
+	 * or remove the eldest entry.
+	 */
+	void createEntry(int hash, K key, V value, int bucketIndex) {
+		HashMap.Entry<K, V> old = table[bucketIndex];
+		Entry<K, V> e = new Entry<>(hash, key, value, old);
+		table[bucketIndex] = e;
+		e.addBefore(header);
+		size++;
+	}
+
+	//没有重写put方法，put方法是继承的父类HashMap的方法，只有get重写
+	public V get(Object key) {
+		Entry<K, V> e = (Entry<K, V>) getEntry(key);
+		if (e == null)
+			return null;
+		e.recordAccess(this);
+		return e.value;
+	}
+
+----------
+Entry映射关系的实现：
 	
+	/**
+	 * LinkedHashMap entry.
+	 * 一定需要注意，它是继承的HashMap的Entry
+	 */
+	private static class Entry<K, V> extends HashMap.Entry<K, V> {
+		// These fields comprise the doubly linked list used for iteration.
+		Entry<K, V> before, after;//扩展两个指针
+
+		Entry(int hash, K key, V value, HashMap.Entry<K, V> next) {
+			super(hash, key, value, next);
+		}
+
+		/**
+		 * Removes this entry from the linked list.
+		 */
+		private void remove() {//移除自己
+			before.after = after;
+			after.before = before;
+		}
+
+		/**
+		 * Inserts this entry before the specified existing entry in the list.
+		 * 把当前节点插入到existingEntry前面
+		 */
+		private void addBefore(Entry<K, V> existingEntry) {
+			after = existingEntry;
+			before = existingEntry.before;
+			before.after = this;
+			after.before = this;
+		}
+
+		/**
+		 * This method is invoked by the superclass whenever the value of a
+		 * pre-existing entry is read by Map.get or modified by Map.set. If the
+		 * enclosing Map is access-ordered, it moves the entry to the end of the
+		 * list; otherwise, it does nothing.
+		 */
+		void recordAccess(HashMap<K, V> m) {
+			LinkedHashMap<K, V> lm = (LinkedHashMap<K, V>) m;
+			if (lm.accessOrder) {//如果是插入的方式排序，这里就是false,不会做任何操作
+				lm.modCount++;
+				remove();
+				addBefore(lm.header);
+			}
+		}
+
+		void recordRemoval(HashMap<K, V> m) {
+			remove();
+		}
+	}
+	
+为什么要这么实现，我觉得是因为如果想按照insert的顺序对map进行访问的话，hashMap是做不到的。
+同时，treeMap的开销也挺高。因此，这个linkedHashMap就在hashMap的基础上，内部维护了一个链表接口，用户可以根据这个链表做到按序输出map中的值。
+
+可以参考这篇博客：
+
+[http://www.cnblogs.com/hzmark/archive/2012/12/26/LinkedHashMap.html](http://www.cnblogs.com/hzmark/archive/2012/12/26/LinkedHashMap.html "LinkedHashMap")
+
+写的还不错。
+
+----------
