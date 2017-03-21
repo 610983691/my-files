@@ -658,6 +658,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>  implements Map<K,V>, Cloneab
         int i = indexFor(hash, table.length);
         for (Entry<K,V> e = table[i]; e != null; e = e.next) {//如果key已经用过了
             Object k;
+			//需要注意的是，一定要hash值和key值都"相等"，才会覆盖。（即如果是基本数据类型就一定会发生覆盖，如果就只是一个Object对象，没有重写过hashCode和equals方法，不会覆盖，而会以链表的形式增加在这个位置!）
             if (e.hash == hash && ((k = e.key) == key || key.equals(k))) {
                 V oldValue = e.value;
                 e.value = value;
