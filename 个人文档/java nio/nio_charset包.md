@@ -89,4 +89,44 @@ Charset
     public final byte[] replacement() {
         return replacement;
     }
+
+	/**
+	* 这个方法是判断repl是否是一个合法的Repl
+	*/
+	 public boolean isLegalReplacement(byte[] repl) {
+        WeakReference<CharsetDecoder> wr = cachedDecoder;
+        CharsetDecoder dec = null;
+        if ((wr == null) || ((dec = wr.get()) == null)) {
+            dec = charset().newDecoder();
+            dec.onMalformedInput(CodingErrorAction.REPORT);
+            dec.onUnmappableCharacter(CodingErrorAction.REPORT);
+            cachedDecoder = new WeakReference<CharsetDecoder>(dec);
+        } else {
+            dec.reset();
+        }
+        ByteBuffer bb = ByteBuffer.wrap(repl);
+        CharBuffer cb = CharBuffer.allocate((int)(bb.remaining()
+                                                  * dec.maxCharsPerByte()));
+        CoderResult cr = dec.decode(bb, cb, true);
+        return !cr.isError();
+    }
+	
+
+#CoderResult
+
+该类是作为一个编码解码结果的  结果状态的描述。
+
+该类提供了一些方法用于获取编码结果的错误信息（或者是无错误情况）
+toString()方法返回一个编码结果的字符串信息。
+
+
+#StandardCharsets
+上述类中，Charset是一个抽象类，无法实例化。因此，提供了StandardCharsets类来获取相应的charset实例。
+
+分析源码可以知道，StandardCharsets类实际上也是调用Charset类的forName()这个静态方法来实例化具体的Charset的。而Charset中提供了newEncoder和newDecoder方法来分别获取CharsetEncoder和CharsetDecoder这两个类的实例。
+
+由于CharsetEncoder和CharsetDecoder是抽象类，不过它们的关键方法encode和decode都是实现了的。因此，通过Charset获取到的这两个类的实例，刚好可以用来对字节/字符进行编码/解码  操作。
+
+当然直接使用Charset类的encode/decode方法也是可以对缓冲区中的字符进行编码解码操作的。
+
 	
