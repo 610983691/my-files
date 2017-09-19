@@ -159,5 +159,71 @@ http://www.blogjava.net/zhuxing/archive/2008/08/08/220841.html
 
 
 ###自定义类加载器:
+核心：
 
+1. 如果没有特殊的需求，那么自定义的ClassLoader不要覆盖loadClass()的加载策略。
+1. 自己重写findClass()方法。
+
+自己参考一些常见的写法实现的ClassLoader如下:
+
+	
+	package lang.classload;
+
+	import java.io.ByteArrayOutputStream;
+	import java.io.FileInputStream;
+	import java.io.InputStream;
+	
+	import com.sun.istack.internal.logging.Logger;
+	
+	public class MyClassLoader extends ClassLoader {
+
+	private static final Logger log = Logger.getLogger(MyClassLoader.class);
+
+	
+	@Override
+	protected Class<?> findClass(String name) throws ClassNotFoundException {
+
+		log.info("加载自定义类----开始");
+		log.info(this.getClass().getName() + "加载：" + name);
+		/* 1.获取字节码文件路径 */
+		String filePath = getClassFilePath(name);
+		byte[] b;
+		try {
+			/*2.这里从硬盘读取字节码文件内容*/
+			b = readClassFileContent(filePath);
+		} catch (Exception e) {
+			log.info("找不到指定的类路径:" + filePath);
+			throw new ClassNotFoundException();
+		}
+			/*3.将该字节流数组生成字节码文件(放到JVM里边了)*/
+		Class<?> classType = defineClass(name, b, 0, b.length);
+		log.info("加载自定义类 ----结束");
+		return classType;
+	}
+
+	//获取class文件路径
+	private final String getClassFilePath(String name) {
+		return "C:\\Users\\tongjie\\Desktop\\"
+				+ name.substring(name.lastIndexOf(".") + 1, name.length())
+				+ ".class";
+	}
+	//读取字节码文件，这里其实可以自由发挥，可以从硬盘，也可以从网络上获取字。只要是正确的字节流就行
+	private final byte[] readClassFileContent(String filepath)
+			throws Exception {
+		int readLength = 0;
+		InputStream br = new FileInputStream(filepath);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		while ((readLength = br.read()) != -1) {
+			out.write(readLength);
+		}
+		br.close();
+
+		return out.toByteArray();
+	}
+
+}
+
+ 自定义类加载器，用法上目前我的理解：
+	1.实现class加密，然后解密加载.
+	2.自己控制一些核心业务的加载。
 	
