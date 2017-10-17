@@ -1,0 +1,6 @@
+<template name="newsItemTemplate">
+  <view>
+    <text> 这是模板内容1</text>
+    <text>这是模板内容122 </text>
+  </view>
+</template>
