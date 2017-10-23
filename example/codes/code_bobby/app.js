@@ -1,6 +1,12 @@
 //app.js
+//该js是小程序的入口程序，用于创建一个实例，一个小程序有且只有一个。
+//时刻明确，js只是获取data，等逻辑控制的。实际界面展现是由wxml控制的。
+
 App({
   onLaunch: function () {
+
+
+    
     // 展示本地存储能力
     var logs = wx.getStorageSync('logs') || []
     logs.unshift(Date.now())

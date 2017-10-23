@@ -13,7 +13,15 @@
 	"condition": {
 		"weapp": {
 			"current": -1,
-			"list": []
+			"list": [
+				{
+					"id": 0,
+					"name": "showcats页面",
+					"pathName": "pages/showcat/showcats",
+					"query": "",
+					"scene": "1001"
+				}
+			]
 		},
 		"search": {
 			"current": -1,

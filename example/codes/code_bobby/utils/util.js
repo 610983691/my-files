@@ -17,3 +17,14 @@ const formatNumber = n => {
 module.exports = {
   formatTime: formatTime
 }
+
+function isEmptyObject(obj) {
+
+  var temp;
+
+  for (temp in obj)
+
+    return false;
+
+  return true
+}

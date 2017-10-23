@@ -1,6 +1,16 @@
 <template name="newsItemTemplate">
-  <view>
-    <text> 这是模板内容1</text>
-    <text>这是模板内容122 </text>
+  <view >
+    <image src="{{newsUserInfo.avatarUrl}}"></image>
+    <text>{{newsUserInfo.userName}}</text>
   </view>
+  <view>
+    {{textInfo}}
+  </view>
+  <view wx:for="{{pictureInfo}}">
+    <video id="myVideo" src="{{videoInfo.videoUrl}}"></video>
+  </view>
+  <view wx:for="{{pictureInfo}}">
+    <image src="{{item.pictureUrl}}"></image>
+  </view>
+  <view>-------------</view>
 </template>
