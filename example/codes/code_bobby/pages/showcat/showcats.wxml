@@ -1,33 +1,89 @@
-<view class="page">
-    <view class="page__bd">
-        <view wx:for="{{array}}" wx:for-index="idx" wx:for-item="itemName">
-          <template is="newsItemTemplate" data="{{...itemName}}"/>
-        </view>
-    </view>
-    <view class="btn-load-more">
-        <button class="" bindtap="loadmoreBtn">加载更多</button>
-    </view>
-</view>
 
-<template name="newsItemTemplate">
-  <view class="container">
-    <view class="views-user-avitor">
-      <image src="{{newsUserInfo.avatarUrl}}"></image>
-      <text>{{newsUserInfo.userName}}</text>
+<scroll-view class="box" scroll-y="true" style="height:1200rpx"  bindscroll="scrollHandle" lower-threshold="50" bindscrolltolower="scrollLoading" >
+  <!--循环展示-->
+  <view class="content" wx:for="{{resultData}}" wx:for-index="k" wx:for-item="dataView">
+    <!--头像-->
+    <view class="head">
+      <image class="baseimg"  src="{{dataView.newsUserInfo.avatarUrl}}" mode="scaleToFill"></image>
     </view>
-    <view class="news_textInfo">
-      {{textInfo}}
+    <!--昵称-->
+    <text class="wz">{{dataView.newsUserInfo.userName}}</text>
+    <!--内容-->
+    <text class="desc">{{dataView.textInfo}}</text>
+    <!--显示上传图片-->
+    <block wx:if="{{dataView.pictureInfo != 'null'}}">
+        <block wx:if="{{dataView.pictureInfo.length == 1}}">
+            <view class="images-wrapper">
+                <view class="images-list">
+                  <block wx:for="{{dataView.pictureInfo}}" wx:for-item="image">
+                    <image src="{{image.pictureTitlePageUrl}}" class="images-image" data-src="{{image}}" data-count="{{dataView.pictureInfo}}" bindtap="previewImage"></image>
+                  </block>
+                </view>
+          </view>
+        </block>
+
+        <block wx:elif="{{dataView.pictureInfo.length >= 2}}">
+          <view class="images-wrapper">
+              <view class="images-list">
+                <block wx:for="{{dataView.pictureInfo}}" wx:for-item="image">
+                  <image src="{{image.pictureTitlePageUrl}}" class="images-image" data-src="{{image}}" data-count="{{dataView.pictureInfo}}" bindtap="previewImage"></image>
+                </block>
+              </view>
+          </view>
+        </block>
+        
+    </block>
+
+    <block wx:if="{{dataView.videoInfo != null}}">
+        <view class="images-wrapper">     
+   
+                      <video src="{{dataView.videoInfo.videoUrl}}" class="images-image" bindtap="previewImage"></video>
+  
+        </view>
+    </block>
+
+    
+    <!--显示地址
+    <block wx:if="{{resultData[k].address != 'undefined'}}">
+        <text class="address">{{resultData[k].address}}</text>
+    </block>
+    -->
+    <!--显示发布时间-->
+    <text class="time">{{dataView.newsPublishTime}}</text> 
+    
+    <!--显示删除
+    <block wx:if="{{resultData[k].userid == userStatus.userId}}">
+        <text class="dele"  bindtap="bindDele" data-deleuserid="{{resultData[k].userid}}" data-deleid="{{resultData[k].id}}">删除</text>
+    </block>
+    -->
+    <!--显示操作小图标-->
+    <view class="biao" bindtap="bindCaoZuo"  data-id="{{dataView.newsId}}">
+      <image class="baseimg" src="/images/biao.png"></image>
     </view>
-    <view class="news_videoInfo"  wx:if="{{videoInfo.videoUrl !='' }}">
-      <video id="myVideo" src="{{videoInfo.videoUrl}}"></video>
-    </view>
-    <view wx:if="{{pictureInfo.length > 0}}">
-      
-      <view wx:for="{{pictureInfo}}">
-        {{idx}}
-        <image src="{{item.pictureUrl}}"></image>
-      </view>
-    </view>
-    <view>-------------</view>
+
+    <!--显示点赞
+
+    <block wx:if="{{resultData[k].dianzan != 'null'}}">
+        <view class="dianzan-box">
+          <view class="dianzan-biao">
+            <image class="baseimg" src="/images/zan.png" mode="aspectFit"></image>
+          </view>
+
+          <view class="dianzan-text">{{resultData[k].dianzan}}</view>
+        </view>
+    </block>
+    -->
+    <!--显示评论-->
+    <!--如果朋友圈下的评论不等于空 则显示当前朋友圈的评论-->
+    
+
   </view>
-</template>
+
+    <!--点赞评论标签-->
+    <view class="caozuo" style="top:{{cz_top}}px;right:{{cz_right}}rpx;" animation="{{animationData}}">
+        <text class="dianzan" bindtap="bindDianZan">点赞</text> <text class="pinglun" bindtap="bindPingLunA">评论</text>
+    </view>
+
+
+
+</scroll-view>
