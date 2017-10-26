@@ -1,16 +1,41 @@
-<template name="newsItemTemplate">
+<template name="newstemplate">
+  <!--一条动态-->
   <view >
-    <image src="{{newsUserInfo.avatarUrl}}"></image>
-    <text>{{newsUserInfo.userName}}</text>
+    
+    <view class="weui-tj-userinfo">
+      <!--发布动态的用户头像-->
+      <image class="avatar"  src="{{msg.newsUserInfo.avatarUrl}}" ></image>
+      <!--用户昵称-->
+      <text class="nickname">{{msg.newsUserInfo.userName}}</text>
+      <!--显示发布时间-->
+      <text class="time">{{msg.newsPublishTime}}发布</text> 
+    </view>
+    <view class="weui-tj-textinfo">
+      <!--用户发布的文本内容-->
+      <text >{{msg.textInfo}}</text>
+    </view>
+    <!--用户发布的图片（最多9个）-->
+    
+    <block wx:if="{{msg.pictureInfo != 'null'}}">
+      <view>
+        <view class="weiui-tongjie-picture" wx:for="{{msg.pictureInfo}}">
+          <image class="">{{item}}</image>
+        </view>
+      </view>
+    </block>
+   
+    <!--用户发布的视频（只能1个），并且用户在发布视频的时候不能同时发布图片-->
+    <view class="weui-tj-videoarea">
+      <video src="{{msg.videoInfo.videoUrl}}"></video>
+    </view>
+
+    <!--显示收藏数量-->
+    <text class="time">{{msg.newsPublishTime}}收藏、喜欢数量</text> 
+
+    <!--显示我是否点赞该动态-->
+    <text class="time">{{msg.newsPublishTime}}我是否收藏</text> 
+
+    <!--链接显示评论-->
+    <text class="time">{{msg.newsPublishTime}}显示评论链接</text> 
   </view>
-  <view>
-    {{textInfo}}
-  </view>
-  <view wx:for="{{pictureInfo}}">
-    <video id="myVideo" src="{{videoInfo.videoUrl}}"></video>
-  </view>
-  <view wx:for="{{pictureInfo}}">
-    <image src="{{item.pictureUrl}}"></image>
-  </view>
-  <view>-------------</view>
 </template>

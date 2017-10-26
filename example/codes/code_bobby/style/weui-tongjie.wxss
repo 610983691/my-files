@@ -1,0 +1,57 @@
+/*!
+ * WeUI v1.1.1 add by tongjie
+ * Copyright 2017 Tencent, Inc.
+ * Licensed under the MIT license
+ 
+ 
+ */
+/*用户信息*/
+ .weui-tj-userinfo{
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  line-height: 5px;
+  
+ }
+/*用户头像*/
+.weui-tj-userinfo image{
+  width: 50px;
+  height: 50px;
+  margin: 20rpx;
+  border-radius: 50%;
+  text-align:left;
+}
+/*用户昵称*/
+.weui-tj-userinfo .nickname{
+  color:green;
+  margin-top:25px;
+  text-align:left;
+
+}
+
+.weui-tj-userinfo .time{
+  width:170px;
+  color:#aaa;
+  line-height: 30px;
+  margin-top:-25px;
+  margin-left:80px;
+}
+
+.weui-tj-textinfo{
+
+  font-family:-apple-system-font,Helvetica Neue,sans-serif;
+  font-size: 10pt;
+  margin-left:10px;
+  margin-right:10px;
+  margin-top:10px;
+}
+
+.weui-tj-videoarea{
+
+ display:block;
+magin-top:5px;
+align:centor;
+background:black;
+}
+
+

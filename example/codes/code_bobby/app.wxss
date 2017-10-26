@@ -1,4 +1,5 @@
-@import 'style/weui.wxss';
+@import '/style/weui.wxss';
+@import '/style/weui-tongjie.wxss';
 /**app.wxss**/
 .container {
   height: 100%;
