@@ -46,21 +46,19 @@
   margin-top:10px;
 }
 
+/*动态中展示视频区域*/
 .weui-tj-videoarea{
   display:block;
 }
 
+/*视频区域宽度，文本操作宽度均定义为93%*/
 .weui-tj-videoarea video{
-  width:388px;
-  height:225px;
-  display:inline-block;
-  line-height:0;
-  overflow:hidden;
-  position:relative;
+  width: 93%;
   margin:10px;
 }
+/*操作区域*/
 .weui-tj-operation{
-  width:90%;
+  width: 93%;
   color:#aaa;
   display: flex;
   font-size: 13px;
