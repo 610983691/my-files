@@ -32,11 +32,11 @@
     <!--操作区域-->
     <view class="weui-tj-operation">
       <!--显示动态阅读数量-->
-      <view class="read">443查看</view> 
+      <button size="mini" class="read">443查看</button> 
       <!--显示评论连接-->
-      <view class="comment">评论</view> 
+      <button  size="mini" class="comment">评论</button> 
       <!--显示点赞数量-->
-      <view class="nice">点赞1万</view> 
+      <button  size="mini" class="nice">点赞1万</button> 
     </view>
     
   </view>
