@@ -16,26 +16,28 @@
     </view>
     <!--用户发布的图片（最多9个）-->
     
-    <block wx:if="{{msg.pictureInfo != 'null'}}">
-      <view>
+    <block wx:if="{{msg.pictureInfo != null}}">
         <view class="weiui-tongjie-picture" wx:for="{{msg.pictureInfo}}">
-          <image class="">{{item}}</image>
+          <image class="" src="{{item.pictureUrl}}"></image>
         </view>
-      </view>
     </block>
    
     <!--用户发布的视频（只能1个），并且用户在发布视频的时候不能同时发布图片-->
-    <view class="weui-tj-videoarea">
-      <video src="{{msg.videoInfo.videoUrl}}"></video>
+    <block wx:if="{{msg.videoInfo != null}}">
+      <view class="weui-tj-videoarea">
+        <video src="{{msg.videoInfo.videoUrl}}"></video>
+      </view>
+    </block>
+
+    <!--操作区域-->
+    <view class="weui-tj-operation">
+      <!--显示动态阅读数量-->
+      <view class="read">443查看</view> 
+      <!--显示评论连接-->
+      <view class="comment">评论</view> 
+      <!--显示点赞数量-->
+      <view class="nice">点赞1万</view> 
     </view>
-
-    <!--显示收藏数量-->
-    <text class="time">{{msg.newsPublishTime}}收藏、喜欢数量</text> 
-
-    <!--显示我是否点赞该动态-->
-    <text class="time">{{msg.newsPublishTime}}我是否收藏</text> 
-
-    <!--链接显示评论-->
-    <text class="time">{{msg.newsPublishTime}}显示评论链接</text> 
+    
   </view>
 </template>

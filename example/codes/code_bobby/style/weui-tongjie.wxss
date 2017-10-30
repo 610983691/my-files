@@ -47,11 +47,35 @@
 }
 
 .weui-tj-videoarea{
-
- display:block;
-magin-top:5px;
-align:centor;
-background:black;
+  display:block;
 }
 
+.weui-tj-videoarea video{
+  width:388px;
+  height:225px;
+  display:inline-block;
+  line-height:0;
+  overflow:hidden;
+  position:relative;
+  margin:10px;
+}
+.weui-tj-operation{
+  width:90%;
+  color:#aaa;
+  display: flex;
+  font-size: 13px;
+  margin-top: -10px;
+  text-align: center;
+}
+.weui-tj-operation .read{
+   text-align: left;
+}
+
+.weui-tj-operation .comment{
+  text-align: center;
+}
+
+.weui-tj-operation .nice{
+  text-align: right;
+}
 
