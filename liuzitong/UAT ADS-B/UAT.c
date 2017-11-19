@@ -126,11 +126,16 @@ int main()
 	void horizontal_v()
 	{
 		register int i;
-		int north_velocity_de;
-		int notrh_velocity;
+		int NS_velocity_d=0;
+		int NS_velocity;
+		float accuracy;
+		srand((unsigned)time(NULL));
+	    accuracy=rand()/(double)(RAND_MAX)-0.5;
 		//根据A/G state分类 
+		//0
 		if((sv[64]==0)&&(sv[65]==0))
 		{
+		//NSvelocity
 		//airborne subsonic 1kt
 		//判断方向
 		  if(sv[66])
@@ -138,7 +143,25 @@ int main()
 		  else
 			  printf("\nthe direciton is north");
 		// velocity 大小10bits
-        for
+          for(i=67;i<77;i++)
+		  {
+		    if(sv[i])
+		      NS_velocity_d= NS_velocity_d+pow(2,59-i);
+		  }
+		  if( NS_velocity_d==0)
+			printf("\nthe N/S velocity is available");
+		  else
+		  {
+			if(NS_velocity_d==1023)
+				printf("\nthe N/S velocity is bigger than 1021.5knots");
+			else
+			{
+				NS_velocity=NS_velocity_d-1+accuracy;
+			    printf("\nthe N/S velocity is %.5f",NS_velocity);
+			}
+		  }
+		}
+		//1
 
 
 
