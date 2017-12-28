@@ -1,13 +1,36 @@
 <!--index.wxml-->
 <view class="container">
-  <view class="userinfo">
-    <button wx:if="{{!hasUserInfo && canIUse}}" open-type="getUserInfo" bindgetuserinfo="getUserInfo"> 获取头像昵称 </button>
-    <block wx:else>
-      <image bindtap="bindViewTap" class="userinfo-avatar" src="{{userInfo.avatarUrl}}" background-size="cover"></image>
-      <text class="userinfo-nickname">{{userInfo.nickName}}</text>
-    </block>
-  </view>
-  <view class="usermotto">
-    <text class="user-motto">{{motto}}</text>
+  <view  class="city"><text>{{cityInfo}}市</text></view>
+  <view class="now">
+    <view class="flex-item">{{weatherNowInfo.temperature}}℃</view>
+    <view class="flex-item">{{weatherNowInfo.text}}</view>
+    <view id="wind">{{weatherDailyInfo[0].wind_direction}}风{{weatherDailyInfo[0].wind_scale}}级</view>
   </view>
 </view>
+
+<view class="container">
+      <view class="today">
+        <view>
+          今天<text>{{weatherDailyInfo[0].text_day}}</text>
+        </view>
+        <text>{{weatherDailyInfo[0].low}}℃/{{weatherDailyInfo[0].high}}℃</text>
+        <!--<text>{{weatherDailyInfo[0].text_day}}</text>-->
+        <!--<text>{{weatherDailyInfo[0].code_day}}</text>-->
+      </view>
+      <view class="tomorrow">
+        <view>
+          明天<text>{{weatherDailyInfo[1].text_day}}</text>
+        </view>
+        <text>{{weatherDailyInfo[1].low}}℃/{{weatherDailyInfo[1].high}}℃</text>
+        
+        <!--<text>{{weatherDailyInfo[1].code_day}}</text>-->
+      </view>
+
+</view>
+<!--
+<view class="">
+  <view class="cy">
+    <text id="cy">穿衣指数</text>
+  </view>
+</view>
+-->

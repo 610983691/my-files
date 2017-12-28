@@ -1,9 +1,0 @@
-<import src="./newstemplate/newstemplate.wxml"/>
-
-
-<view class="page" wx:for="{{resultData}}" wx:for-index="idx" wx:for-item="msg">
-  <template is="newstemplate" data="{{msg}}"></template>
-</view>
-<view class="">加载更多...</view>
-
-

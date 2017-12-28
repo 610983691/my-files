@@ -1,38 +1,14 @@
 {
   "pages":[
-    "pages/index/index",
-    "pages/logs/logs",
-    "pages/location/location",
-    "pages/showcat/showcats"
+    "pages/index/index"
   ],
   "window":{
     "backgroundTextStyle":"light",
-    "navigationBarTitleText": "WeChat",
+    "navigationBarTitleText": "天气",
     "navigationBarTextStyle":"black",
     "navigationBarBackgroundColor": "#f8f8f8",
-    "backgroundColor": "#f8f8f8"
+    "backgroundColor": "#f8f8f8",
+    "enablePullDownRefresh":true
   },
-  "debug": true,
-  "tabBar": {
-    "color": "#a9b7b7",
-    "selectedColor": "#dc443a",
-    "borderStyle": "white",
-    "list": [
-      {
-        "pagePath": "pages/index/index",
-        "text": "首页",
-        "iconPath":"style/images/home.png"
-      },
-      {
-        "pagePath": "pages/showcat/showcats",
-        "text": "喵喵",
-        "iconPath": "style/images/cat.png"
-      },
-      {
-        "pagePath": "pages/location/location",
-        "text": "位置",
-        "iconPath":"style/images/location.png"
-      }
-    ]
-  }
+  "debug": true
 }
